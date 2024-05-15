@@ -114,6 +114,12 @@ async fn create_event(
 #[derive(Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct GetEventResponse {
+    event: EventResponse,
+}
+
+#[derive(Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct EventResponse {
     id: uuid::Uuid,
     title: String,
     details: Option<String>,
@@ -158,12 +164,14 @@ pub async fn get_event(
     };
 
     Ok(Json(GetEventResponse {
-        id: Uuid::parse_str(&event.id).unwrap(),
-        title: event.title,
-        details: event.details,
-        slug: event.slug,
-        maximum_attendees: event.maximum_attendees,
-        attendees_amount: attendee_amount,
+        event: EventResponse {
+            id: Uuid::parse_str(&event.id).unwrap(),
+            title: event.title,
+            details: event.details,
+            slug: event.slug,
+            maximum_attendees: event.maximum_attendees,
+            attendees_amount: attendee_amount,
+        },
     }))
 }
 
