@@ -11,7 +11,7 @@ use routes::{
     },
 };
 use std::net::SocketAddr;
-use tower_http::trace::TraceLayer;
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -80,6 +80,7 @@ async fn main() -> anyhow::Result<()> {
         .nest("/", routes::attendees::router())
         .merge(SwaggerUi::new("/docs").url("/api-doc/openapi.json", doc))
         .layer(TraceLayer::new_for_http())
+        .layer(CorsLayer::permissive())
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3333));

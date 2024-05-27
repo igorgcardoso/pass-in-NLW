@@ -295,9 +295,11 @@ pub async fn register_for_event(
 #[serde(rename_all = "camelCase")]
 pub struct GetAttendeesResponse {
     attendees: Vec<AttendeeWithCheckIn>,
+    total: i64,
 }
 
 #[derive(Deserialize, ToSchema, Validate)]
+#[serde(rename_all = "camelCase")]
 pub struct GetAttendeesQuery {
     query: Option<String>,
     #[validate(range(min = 0))]
@@ -325,9 +327,10 @@ pub async fn get_attendees(
 
     const PAGE_SIZE: i64 = 10;
 
-    let attendees = match conn
+    let (attendees, total) = match conn
         .interact(move |conn| {
-            attendees::table
+            let mut attendees_query = attendees::table
+                .into_boxed()
                 .filter(attendees::event_id.eq(event_id.to_string()))
                 .left_join(check_ins::table)
                 .select((
@@ -336,28 +339,41 @@ pub async fn get_attendees(
                     attendees::email,
                     attendees::created_at,
                     check_ins::created_at.nullable(),
-                ))
+                ));
+
+            if let Some(name) = name {
+                attendees_query = attendees_query.filter(attendees::name.like(format!("%{name}%")))
+            }
+            let attendees = attendees_query
                 .limit(PAGE_SIZE)
                 .offset(page * PAGE_SIZE)
-                .load::<AttendeeWithCheckIn>(conn)
+                .load::<AttendeeWithCheckIn>(conn);
+            let total = attendees::table
+                .filter(attendees::event_id.eq(event_id.to_string()))
+                .count()
+                .get_result::<i64>(conn);
+
+            (attendees, total)
         })
         .await
     {
         Ok(result) => match result {
-            Ok(attendees) => attendees,
-            Err(err) => return Err(AppError::from(err)),
+            (Ok(attendees), Ok(total)) => (attendees, total),
+            (Err(err), _) => return Err(AppError::from(err)),
+            (_, Err(err)) => return Err(AppError::from(err)),
         },
         Err(err) => return Err(AppError::InternalServerError(err.to_string())),
     };
 
-    if let Some(name) = name {
-        let attendees: Vec<_> = attendees
-            .iter()
-            .filter(|attendee| attendee.name.contains(&name))
-            .cloned()
-            .collect();
+    // if let Some(name) = name {
+    //     let attendees: Vec<_> = attendees
+    //         .iter()
+    //         .filter(|attendee| attendee.name.contains(&name))
+    //         .cloned()
+    //         .collect();
 
-        return Ok(Json(GetAttendeesResponse { attendees }));
-    }
-    Ok(Json(GetAttendeesResponse { attendees }))
+    //     return Ok(Json(GetAttendeesResponse { attendees, total }));
+    // }
+
+    Ok(Json(GetAttendeesResponse { attendees, total }))
 }
