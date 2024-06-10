@@ -1,15 +1,14 @@
 use axum::Router;
 use deadpool_diesel::sqlite::{Manager, Pool};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use models::AttendeeWithCheckIn;
-use routes::{
-    attendees::{AttendeeBadgeResponse, Badge, __path_check_in, __path_get_attendee_badge},
-    events::{
-        CreateEventRequest, CreateEventResponse, GetAttendeesQuery, GetAttendeesResponse,
-        GetEventResponse, RegisterForEventRequest, RegisterForEventResponse, __path_create_event,
-        __path_get_attendees, __path_get_event, __path_register_for_event,
-    },
+use dtos::*;
+use error::ErrorResponse;
+use handlers::{
+    check_in::__path_check_in, create_event::__path_create_event,
+    get_attendee_badge::__path_get_attendee_badge, get_attendees::__path_get_attendees,
+    get_event::__path_get_event, register_for_event::__path_register_for_event,
 };
+use state::AppState;
 use std::net::SocketAddr;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 use utoipa::OpenApi;
@@ -17,16 +16,14 @@ use utoipa_swagger_ui::SwaggerUi;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/");
 
+mod domain;
+mod dtos;
 mod error;
-mod models;
-mod routes;
-mod schema;
+mod handlers;
+mod infra;
+mod services;
+mod state;
 mod utils;
-
-#[derive(Clone)]
-pub struct AppState {
-    pool: Pool,
-}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -51,16 +48,16 @@ async fn main() -> anyhow::Result<()> {
             check_in
         ),
         components(schemas(
-            CreateEventRequest,
-            CreateEventResponse,
-            GetEventResponse,
-            RegisterForEventRequest,
-            RegisterForEventResponse,
-            GetAttendeesQuery,
-            GetAttendeesResponse,
-            AttendeeBadgeResponse,
-            Badge,
-            AttendeeWithCheckIn,
+            ErrorResponse,
+            CreateEventRequestDTO,
+            CreateEventResponseDTO,
+            GetEventDTO,
+            EventDTO,
+            RegisterForEventRequestDTO,
+            RegisterForEventResponseDTO,
+            GetAttendeesResponseDTO,
+            AttendeeDTO,
+            AttendeeBadgeDTO,
         ))
     )]
     struct ApiDoc;
@@ -69,15 +66,14 @@ async fn main() -> anyhow::Result<()> {
 
     let db_url = std::env::var("DATABASE_URL")?;
     let manager = Manager::new(db_url, deadpool_diesel::Runtime::Tokio1);
-    let pool = Pool::builder(manager).build()?;
+    let pool = { Pool::builder(manager).build()? };
 
     run_migrations(&pool).await;
 
-    let state = AppState { pool };
+    let state = AppState::new(Box::new(pool));
 
     let app = Router::new()
-        .nest("/", routes::events::router())
-        .nest("/", routes::attendees::router())
+        .merge(handlers::create_router())
         .merge(SwaggerUi::new("/docs").url("/api-doc/openapi.json", doc))
         .layer(TraceLayer::new_for_http())
         .layer(CorsLayer::permissive())

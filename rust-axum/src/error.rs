@@ -5,8 +5,9 @@ use axum::{
 };
 use serde::Serialize;
 use thiserror::Error;
+use utoipa::ToSchema;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct ErrorResponse {
     message: String,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -25,6 +26,18 @@ pub enum AppError {
     BadRequest(String),
     #[error("{0}")]
     NotFound(String),
+}
+
+impl From<deadpool_diesel::PoolError> for AppError {
+    fn from(err: deadpool_diesel::PoolError) -> Self {
+        AppError::InternalServerError(err.to_string())
+    }
+}
+
+impl From<deadpool_diesel::InteractError> for AppError {
+    fn from(err: deadpool_diesel::InteractError) -> Self {
+        AppError::InternalServerError(err.to_string())
+    }
 }
 
 impl IntoResponse for AppError {
