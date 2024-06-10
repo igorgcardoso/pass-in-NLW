@@ -1,6 +1,8 @@
-from django.urls import path
-from .views import create_event
+from django.urls import include, path
+from .views.events import router as eventRouter
+from .views.attendees import router as attendeeRouter
 
 urlpatterns = [
-    path("events/", create_event),
+    path("", include(eventRouter.urls)),
+    path("", include(attendeeRouter.urls)),
 ]

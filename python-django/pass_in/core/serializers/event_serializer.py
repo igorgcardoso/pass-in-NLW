@@ -5,10 +5,11 @@ from core.models import Event
 
 
 class EventSerializer(serializers.ModelSerializer):
+    attendees_amount = serializers.IntegerField(read_only=True)
     class Meta:
         model = Event
         fields = '__all__'
-        read_only_fields = ['id', 'slug']
+        read_only_fields = ['id', 'slug', 'attendees_amount']
 
     def validate_title(self, value: str):
         if not value:
