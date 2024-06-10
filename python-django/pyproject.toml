@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "python-django"
+version = "0.1.0"
+description = ""
+authors = ["Igor Cardoso <igorgcardoso@protonmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+djangorestframework = "^3.15.1"
+djangorestframework-camel-case = "^1.4.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
