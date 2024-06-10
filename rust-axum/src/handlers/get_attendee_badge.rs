@@ -1,12 +1,13 @@
 use axum::{
     debug_handler,
-    extract::{Path, State},
-    http::HeaderMap,
+    extract::{Host, Path, State},
     Json,
 };
-use url::Url;
 
-use crate::{error::AppError, services::ServiceTrait, state::AppState, AttendeeBadgeDTO};
+use crate::{
+    error::AppError, services::ServiceTrait, state::AppState, AttendeeBadgeDTO,
+    AttendeeBadgeResponseDTO,
+};
 
 #[debug_handler]
 #[utoipa::path(
@@ -14,40 +15,27 @@ use crate::{error::AppError, services::ServiceTrait, state::AppState, AttendeeBa
     tag = "attendees",
     path = "/attendees/{attendee_id}/badge",
     params(("attendee_id" = i32, Path, description = "Attendee ID")),
-    responses((status = OK, body = AttendeeBadgeResponse), (status = NOT_FOUND, body = ErrorResponse))
+    responses((status = OK, body = AttendeeBadgeResponseDTO), (status = NOT_FOUND, body = ErrorResponse))
 )]
 /// Get an attendee's badge
 pub async fn get_attendee_badge(
     state: State<AppState>,
     Path(attendee_id): Path<i32>,
-    headers: HeaderMap,
-) -> Result<Json<AttendeeBadgeDTO>, AppError> {
+    host: Host,
+) -> Result<Json<AttendeeBadgeResponseDTO>, AppError> {
     let attendee = state.services.attendee.get(&attendee_id).await?;
 
-    let base_url = Url::parse(&*format!(
-        "{}://{}",
-        headers
-            .get("x-forwarded-proto")
-            .map(|v| v.to_str().unwrap_or("http"))
-            .unwrap_or("http"),
-        headers
-            .get("x-forwarded-host")
-            .map(|v| v.to_str().unwrap_or("localhost"))
-            .unwrap_or("localhost")
-    ))
-    .unwrap();
+    tracing::info!("{}", host.0);
 
-    let check_in_url = format!(
-        "{}://{}/attendees/{}/check-in",
-        base_url.scheme(),
-        base_url.host_str().unwrap_or("localhost"),
-        attendee.id()
-    );
+    let check_in_url = format!("{}/attendees/{}/check-in", host.0, attendee.id());
 
-    Ok(Json(AttendeeBadgeDTO {
-        name: attendee.name().to_string(),
-        email: attendee.email().to_string(),
-        event_title: attendee.event().title().to_string(),
-        check_in_url,
+    Ok(Json(AttendeeBadgeResponseDTO {
+        badge: AttendeeBadgeDTO {
+            id: attendee.id(),
+            name: attendee.name().to_string(),
+            email: attendee.email().to_string(),
+            event_title: attendee.event().title().to_string(),
+            check_in_url,
+        },
     }))
 }

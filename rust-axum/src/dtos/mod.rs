@@ -6,7 +6,7 @@ mod register_for_event;
 
 pub use self::{
     create_event::{CreateEventRequestDTO, CreateEventResponseDTO},
-    get_attendee_badge::AttendeeBadgeDTO,
+    get_attendee_badge::{AttendeeBadgeDTO, AttendeeBadgeResponseDTO},
     get_attendees::{AttendeeDTO, GetAttendeesResponseDTO},
     get_event::{EventDTO, GetEventDTO},
     register_for_event::{RegisterForEventRequestDTO, RegisterForEventResponseDTO},

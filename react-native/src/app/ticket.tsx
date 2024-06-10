@@ -14,10 +14,30 @@ import { Button } from "@/components/button";
 import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { QRCode } from "@/components/qrcode";
+import { useBadgeStore } from "@/store/badge-store";
+import { Redirect } from "expo-router";
+import { Share } from "react-native";
+import { MotiView } from "moti";
 
 export default function Ticket() {
-  const [image, setImage] = useState("");
   const [isQRCodeExpanded, setIsQRCodeExpanded] = useState(false);
+
+  const badgeStore = useBadgeStore();
+
+  async function handleShare() {
+    if (badgeStore.data?.checkInUrl) {
+      await Share.share({
+        message: badgeStore.data.checkInUrl,
+      });
+    }
+    try {
+    } catch (error) {
+      Alert.alert(
+        "Compartilhar",
+        "Não foi possível compartilhar a credencial.",
+      );
+    }
+  }
 
   async function handleSelectImage() {
     try {
@@ -28,11 +48,15 @@ export default function Ticket() {
       });
 
       if (result.assets) {
-        setImage(result.assets[0].uri);
+        badgeStore.updateAvatar(result.assets[0].uri);
       }
     } catch (error) {
       Alert.alert("Foto", "Não foi possível selecionar a imagem.");
     }
+  }
+
+  if (!badgeStore.data?.checkInUrl) {
+    return <Redirect href="/" />;
   }
 
   return (
@@ -45,29 +69,48 @@ export default function Ticket() {
         showsVerticalScrollIndicator={false}
       >
         <Credential
+          data={badgeStore.data}
           onChangeAvatar={handleSelectImage}
-          image={image}
           onExpandQRCode={() => setIsQRCodeExpanded(true)}
         />
 
-        <FontAwesome
-          name="angle-double-down"
-          size={24}
-          color={colors.gray[300]}
-          className="my-6 self-center"
-        />
+        <MotiView
+          from={{
+            translateY: 0,
+          }}
+          animate={{
+            translateY: 10,
+          }}
+          transition={{
+            loop: true,
+            type: "timing",
+            duration: 700,
+          }}
+        >
+          <FontAwesome
+            name="angle-double-down"
+            size={24}
+            color={colors.gray[300]}
+            className="my-6 self-center"
+          />
+        </MotiView>
 
         <Text className="mt-4 font-bold text-2xl text-white">
           Compartilhar credencial
         </Text>
 
         <Text className="mb-6 mt-1 font-regular text-base text-white">
-          Mostre ao mundo que você vai participar do Unite Summit!
+          Mostre ao mundo que você vai participar do{" "}
+          {badgeStore.data.eventTitle}!
         </Text>
 
-        <Button title="Compartilhar" />
+        <Button title="Compartilhar" onPress={handleShare} />
 
-        <TouchableOpacity activeOpacity={0.7} className="mt-10">
+        <TouchableOpacity
+          activeOpacity={0.7}
+          className="mt-10"
+          onPress={badgeStore.remove}
+        >
           <Text className="text-center font-bold text-base text-white">
             Remover Ingresso
           </Text>
