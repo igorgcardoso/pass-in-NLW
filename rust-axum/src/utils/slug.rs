@@ -2,7 +2,7 @@ use regex::Regex;
 use unicode_normalization::UnicodeNormalization;
 
 pub fn generate_slug(text: &String) -> String {
-    let pattern = Regex::new(r"/[\u0300-\u036f]").unwrap();
+    let pattern = Regex::new(r"[\u0300-\u036f]").unwrap();
     let other_pattern = Regex::new(r"[^\w\s-]").unwrap();
     let slug = text
         .to_lowercase()
