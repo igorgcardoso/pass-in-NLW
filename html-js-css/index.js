@@ -63,7 +63,15 @@ const attendees = [
 
 function createNewAttendee(attendee) {
   const subscribedAt = dayjs(Date.now()).to(attendee.subscribedAt);
-  const checkedInAt = dayjs(Date.now()).to(attendee.checkedInAt);
+  let checkedInAt = dayjs(Date.now()).to(attendee.checkedInAt);
+
+  if (attendee.checkedInAt == null) {
+    checkedInAt = `
+    <button data-email="${attendee.email}" onclick="makeCheckIn(event)">
+      Confirmar check-in
+    </button>
+    `;
+  }
 
   return `
   <tr>
@@ -97,3 +105,40 @@ function updateList(attendees) {
 }
 
 updateList(attendees);
+
+function addAttendee(event) {
+  event.preventDefault();
+
+  const formData = new FormData(event.target);
+
+  const attendee = {
+    name: formData.get("name"),
+    email: formData.get("email"),
+    subscribedAt: new Date(),
+    checkedInAt: null,
+  };
+
+  if (attendees.some((a) => a.email == attendee.email)) {
+    alert("Este e-mail já está cadastrado");
+    return;
+  }
+
+  attendees.push(attendee);
+  updateList(attendees);
+
+  event.target.reset();
+}
+
+function makeCheckIn(event) {
+  if (!confirm("Tem certeza que deseja fazer check-in?")) {
+    return;
+  }
+
+  const attendee = attendees.find(
+    (attendee) => attendee.email == event.target.dataset.email,
+  );
+
+  attendee.checkedInAt = new Date();
+
+  updateList(attendees);
+}
