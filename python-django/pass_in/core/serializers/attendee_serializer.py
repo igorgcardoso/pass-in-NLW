@@ -5,6 +5,7 @@ from core.models import Attendee
 
 
 class AttendeeSerializer(serializers.ModelSerializer):
+    checked_in_at = serializers.DateTimeField(read_only=True)
     class Meta:
         model = Attendee
         fields = '__all__'
