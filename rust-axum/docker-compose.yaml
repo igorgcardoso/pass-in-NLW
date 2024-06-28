@@ -1,0 +1,7 @@
+services:
+  api-pass-in:
+    build:
+      context: .
+    container_name: api-pass-in
+    ports:
+      - "3333:3333"
