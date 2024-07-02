@@ -3,7 +3,7 @@ use crate::{
     error::AppError,
     infra::schema::{attendees, check_ins, events},
 };
-use deadpool_diesel::sqlite::Pool;
+use deadpool_diesel::postgres::Pool;
 use diesel::prelude::*;
 use uuid::Uuid;
 

@@ -1,4 +1,4 @@
-use deadpool_diesel::sqlite::Pool;
+use deadpool_diesel::postgres::Pool;
 use uuid::Uuid;
 use validator::Validate;
 

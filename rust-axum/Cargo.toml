@@ -9,13 +9,12 @@ edition = "2021"
 anyhow = "1.0.83"
 axum = { version = "0.7.5", features = ["http2", "macros"] }
 chrono = { version = "0.4.38", features = ["serde"] }
-deadpool-diesel = { version = "0.6.1", features = ["sqlite"] }
+deadpool-diesel = { version = "0.6.1", features = ["postgres"] }
 diesel = { version = "2.1.6", features = [
-    "sqlite",
     "uuid",
     "serde_json",
     "chrono",
-    "returning_clauses_for_sqlite_3_35",
+    "postgres",
 ] }
 diesel_migrations = "2.1.0"
 dotenvy = "0.15.7"
@@ -29,7 +28,12 @@ tower-http = { version = "0.5.2", features = ["trace", "cors"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 unicode-normalization = "0.1.23"
-utoipa = { version = "4.2.3", features = ["axum_extras", "openapi_extensions", "uuid", "chrono"] }
+utoipa = { version = "4.2.3", features = [
+    "axum_extras",
+    "openapi_extensions",
+    "uuid",
+    "chrono",
+] }
 utoipa-swagger-ui = { version = "7.0.1", features = ["axum"] }
 uuid = { version = "1.8.0", features = ["v4", "serde"] }
 validator = { version = "0.18.1", features = ["derive"] }

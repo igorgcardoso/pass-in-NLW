@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-push:
+    name: "Build and Push"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate sha
+        id: generate_sha
+        run: |
+          SHA=$(echo $GITHUB_SHA | head -c7)
+          echo "SHA=$SHA" >> $GITHUB_OUTPUT
+
+      - name: Build docker image
+        run: docker build -t passin:${{ steps.generate_sha.outputs.SHA }} .
+
+      # - name: Log into the container registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # - name: Push image
+      #   run: |
+      #     docker push username/passin:${{ steps.generate_sha.outputs.SHA }}
+      #     docker tag username/passin:${{ steps.generate_sha.outputs.SHA }} username/passin:latest
+      #     docker push username/passin:latest

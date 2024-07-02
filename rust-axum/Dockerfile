@@ -8,7 +8,7 @@ RUN cargo build --release
 
 FROM rust:1.79-slim AS runtime
 
-RUN apt-get update && apt-get install -y sqlite3
+RUN apt-get update && apt-get install -y postgresql-client
 
 COPY --from=builder /usr/src/app/target/release/pass-in /usr/local/bin/
 

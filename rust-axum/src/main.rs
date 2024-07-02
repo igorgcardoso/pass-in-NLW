@@ -1,5 +1,5 @@
 use axum::Router;
-use deadpool_diesel::sqlite::{Manager, Pool};
+use deadpool_diesel::postgres::{Manager, Pool};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dtos::*;
 use error::ErrorResponse;

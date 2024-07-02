@@ -11,7 +11,7 @@ pub trait ServiceTrait {
 mod attendee;
 mod event;
 
-use deadpool_diesel::sqlite::Pool;
+use deadpool_diesel::postgres::Pool;
 
 #[derive(Clone)]
 pub struct Services {
