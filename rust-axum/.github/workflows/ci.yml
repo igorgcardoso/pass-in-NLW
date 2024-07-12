@@ -34,3 +34,13 @@ jobs:
       #     docker push username/passin:${{ steps.generate_sha.outputs.SHA }}
       #     docker tag username/passin:${{ steps.generate_sha.outputs.SHA }} username/passin:latest
       #     docker push username/passin:latest
+
+      - name: Update image tag
+        uses: fjogeleit/yaml-update-action@main
+        with:
+          branch: master
+          valueFile: "deploy/values.yaml"
+          property: "image.tag"
+          value: "${{ steps.generate_sha.outputs.SHA }}"
+          commitChange: true
+          message: "Updated tag in values helm"
